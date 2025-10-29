@@ -10,20 +10,20 @@ const theme = createTheme({
     mode: "dark",
     primary: { main: "#7b61ff" },
     background: {
-      default: '#0b0f14',
-      paper: '#0f1720'
+      default: "#f9fafcff",
+      paper: "#f2f3f5ff",
     },
     text: {
-      primary: '#e6eef8',
-      secondary: '#9aa8bb'
-    }
+      primary: "#0e0f0fff",
+      secondary: "#9aa8bb",
+    },
   },
   typography: {
     fontFamily: "Roboto, Inter, Arial, sans-serif",
   },
   components: {
     MuiAppBar: { defaultProps: { elevation: 1 } },
-  }
+  },
 });
 
 const root = createRoot(document.getElementById("root"));

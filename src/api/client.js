@@ -1,5 +1,13 @@
 const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
+function getHeaders() {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': token ? `Bearer ${token}` : undefined
+  };
+}
+
 async function handleResponse(res) {
   const text = await res.text()
   let data
@@ -14,19 +22,23 @@ async function handleResponse(res) {
 }
 
 export async function getTasks() {
-  const res = await fetch(`${BASE}/tasks`)
+  const res = await fetch(`${BASE}/tasks`, {
+    headers: getHeaders()
+  })
   return handleResponse(res)
 }
 
 export async function getTask(id) {
-  const res = await fetch(`${BASE}/tasks/${id}`)
+  const res = await fetch(`${BASE}/tasks/${id}`, {
+    headers: getHeaders()
+  })
   return handleResponse(res)
 }
 
 export async function createTask(payload) {
   const res = await fetch(`${BASE}/tasks`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(payload),
   })
   return handleResponse(res)
@@ -35,13 +47,16 @@ export async function createTask(payload) {
 export async function updateTask(id, payload) {
   const res = await fetch(`${BASE}/tasks/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(payload),
   })
   return handleResponse(res)
 }
 
 export async function deleteTask(id) {
-  const res = await fetch(`${BASE}/tasks/${id}`, { method: 'DELETE' })
+  const res = await fetch(`${BASE}/tasks/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders()
+  })
   return handleResponse(res)
 }
