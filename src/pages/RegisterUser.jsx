@@ -52,33 +52,47 @@ const RegisterUser = () => {
     setSubmitting(true);
     try {
       const response = await LoginApis.registerUser(values);
+      console.log(
+        "Register response status:",
+        response.status,
+        "data:",
+        response.data
+      );
 
-      // response now is { data, status }
-      console.log('Register response status:', response.status, 'data:', response.data);
-
-      // if backend returns token in data, save it
       if (response?.data?.token) {
         localStorage.setItem("token", response.data.token);
       }
-
-      // handle accepted (202) specifically
       if (response.status === 202) {
-        setSnackbar({ open: true, message: 'Registration accepted (202). Check your email to complete registration.', severity: 'info' });
+        setSnackbar({
+          open: true,
+          message: "Registration accepted (202).",
+          severity: "info",
+        });
       } else if (response.status >= 200 && response.status < 300) {
-        setSnackbar({ open: true, message: 'Registration successful! Redirecting...', severity: 'success' });
+        setSnackbar({
+          open: true,
+          message: "Registration successful! Redirecting...",
+          severity: "success",
+        });
       } else {
-        setSnackbar({ open: true, message: `Unexpected status: ${response.status}`, severity: 'warning' });
+        setSnackbar({
+          open: true,
+          message: `Unexpected status: ${response.status}`,
+          severity: "warning",
+        });
       }
 
       resetForm();
-      setTimeout(() => navigate('/'), 1500);
+      setTimeout(() => navigate("/"), 1500);
     } catch (error) {
       console.error("Registration failed:", error);
 
       let errorMessage = "Registration failed. Please try again.";
       // axios error shape
-      if (error?.response?.data?.message) errorMessage = error.response.data.message;
-      else if (error?.response?.status === 409) errorMessage = "Username already exists.";
+      if (error?.response?.data?.message)
+        errorMessage = error.response.data.message;
+      else if (error?.response?.status === 409)
+        errorMessage = "Username already exists.";
       else if (error?.message) errorMessage = error.message;
 
       setSnackbar({ open: true, message: errorMessage, severity: "error" });
@@ -106,12 +120,29 @@ const RegisterUser = () => {
           bgcolor: "background.paper",
         }}
       >
-        <Typography variant="h5" fontWeight="bold" align="center" color="primary" gutterBottom>
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          align="center"
+          color="primary"
+          gutterBottom
+        >
           Register User
         </Typography>
 
-        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-          {({ values, errors, touched, handleChange, handleBlur, isSubmitting }) => (
+        <Formik
+          initialValues={initialValues}
+          validationSchema={validationSchema}
+          onSubmit={handleSubmit}
+        >
+          {({
+            values,
+            errors,
+            touched,
+            handleChange,
+            handleBlur,
+            isSubmitting,
+          }) => (
             <Form>
               <Stack spacing={2}>
                 <TextField
@@ -124,8 +155,8 @@ const RegisterUser = () => {
                   error={touched.firstName && Boolean(errors.firstName)}
                   helperText={touched.firstName && errors.firstName}
                   sx={{
-                    '& .MuiInputBase-input': {
-                      color: 'text.primary',
+                    "& .MuiInputBase-input": {
+                      color: "text.primary",
                     },
                   }}
                 />
@@ -140,8 +171,8 @@ const RegisterUser = () => {
                   error={touched.lastName && Boolean(errors.lastName)}
                   helperText={touched.lastName && errors.lastName}
                   sx={{
-                    '& .MuiInputBase-input': {
-                      color: 'text.primary',
+                    "& .MuiInputBase-input": {
+                      color: "text.primary",
                     },
                   }}
                 />
@@ -156,8 +187,8 @@ const RegisterUser = () => {
                   error={touched.username && Boolean(errors.username)}
                   helperText={touched.username && errors.username}
                   sx={{
-                    '& .MuiInputBase-input': {
-                      color: 'text.primary',
+                    "& .MuiInputBase-input": {
+                      color: "text.primary",
                     },
                   }}
                 />
@@ -175,20 +206,30 @@ const RegisterUser = () => {
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton onClick={() => setShowPassword((p) => !p)} edge="end">
+                        <IconButton
+                          onClick={() => setShowPassword((p) => !p)}
+                          edge="end"
+                        >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
                     ),
                   }}
                   sx={{
-                    '& .MuiInputBase-input': {
-                      color: 'text.primary',
+                    "& .MuiInputBase-input": {
+                      color: "text.primary",
                     },
                   }}
                 />
 
-                <Button type="submit" variant="contained" color="primary" size="large" disabled={isSubmitting} fullWidth>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  disabled={isSubmitting}
+                  fullWidth
+                >
                   {isSubmitting ? "Registering..." : "Register"}
                 </Button>
               </Stack>
@@ -203,7 +244,12 @@ const RegisterUser = () => {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }} variant="filled">
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+          variant="filled"
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

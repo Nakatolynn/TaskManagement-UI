@@ -12,12 +12,13 @@ import InboxIcon from "@mui/icons-material/Inbox";
 import ArticleIcon from "@mui/icons-material/Article";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import WidgetsIcon from "@mui/icons-material/Widgets";
+import { StackedBarChart } from "@mui/icons-material";
 
-export default function Sidebar() {
+export default function Sidebar({ user }) {
   const items = [
-    { key: "home", label: "Home", icon: <HomeIcon /> },
-    { key: "inbox", label: "Inbox", icon: <InboxIcon /> },
-    { key: "dashboards", label: "Dashboards", icon: <DashboardIcon /> },
+    { key: "dashboards", label: "Dashboard", icon: <HomeIcon /> } ,
+    // { key: "dashboards", label: "Dashboard", icon: <DashboardIcon /> },
+    { key: "reports", label: "Reports", icon: <StackedBarChart /> },
   ];
 
   return (
@@ -32,9 +33,9 @@ export default function Sidebar() {
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 2 }}>
         <Avatar sx={{ bgcolor: "primary.main" }}>L</Avatar>
         <Box>
-          <Typography variant="subtitle1">Your Workspace</Typography>
-          <Typography variant="caption" color="text.secondary">
-            Personal
+          <Typography variant="subtitle1">Profile</Typography>
+          <Typography variant="h6" color="primary.main">
+            {user?.userName}
           </Typography>
         </Box>
       </Box>

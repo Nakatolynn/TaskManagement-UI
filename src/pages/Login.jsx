@@ -23,7 +23,7 @@ const validationSchema = Yup.object().shape({
     .min(6, "Password must be at least 6 characters"),
 });
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, user }) {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -32,9 +32,9 @@ export default function Login({ onLogin }) {
     try {
       const { data } = await LoginApis.login(values);
       onLogin && onLogin({ userName: values.userName, token: data.token });
-      navigate("/");
+      navigate(`/home/${user.userId}`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || "Login failed");
     } finally {
       setSubmitting(false);
     }

@@ -1,13 +1,9 @@
 import RoutePaths from "../routes/TaskMgtRoutes";
 import axiosService from "./axios";
 
-const BaseUrl = import.meta.env.VITE_APP_API_URL;
 const createTask = async (formData) => {
   try {
-    const response = await axiosService.post(
-      BaseUrl + RoutePaths.createTask,
-      formData
-    );
+    const response = await axiosService.post(RoutePaths.createTask, formData);
     return response.data;
   } catch (error) {
     console.error("error creating task", error);
@@ -17,11 +13,9 @@ const createTask = async (formData) => {
 
 const getAllTasks = async (data, signal) => {
   try {
-    const response = await axiosService.get(
-      BaseUrl + RoutePaths.listOfTasks,
-      data,
-      { signal: signal }
-    );
+    const response = await axiosService.get(RoutePaths.listOfTasks, data, {
+      signal: signal,
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching task list:", error);
@@ -31,28 +25,20 @@ const getAllTasks = async (data, signal) => {
 
 const updateTask = async (data, signal) => {
   try {
-    const response = await axiosService.put(
-      BaseUrl + RoutePaths.updateTask,
-      data,
-      { signal: signal }
-    );
+    const response = await axiosService.put(RoutePaths.updateTask, data, {
+      signal: signal,
+    });
     return response.data;
   } catch (error) {
     console.error("Error updating task:", error);
     throw error;
   }
 };
-const getTaskById = async (id, signal) => {
+const getTaskById = async (id) => {
   try {
-    const getCoiDeclarationUrl = `${BaseUrl}/${RoutePaths.getTaskById}?coiDeclarationId=${id}`;
-    const response = await axiosServices.post(
-      getCoiDeclarationUrl,
-      {},
-      { signal }
-    );
+    const response = await axiosService.get(RoutePaths.getTaskById + `/${id}`);
     return response.data;
   } catch (error) {
-    // Handle cancellation error if the request was aborted
     if (error.name === "AbortError") {
       console.log("Request was aborted");
     } else {
@@ -62,17 +48,11 @@ const getTaskById = async (id, signal) => {
   }
 };
 
-const getTasksCreatedByUser = async (id, signal) => {
+const getTasksCreatedByUser = async (id) => {
   try {
-    const getCoiDeclarationUrl = `${BaseUrl}/${RoutePaths.getUserDetailsByuserId}?coiDeclarationId=${id}`;
-    const response = await axiosServices.post(
-      getCoiDeclarationUrl,
-      {},
-      { signal }
-    );
+    const response = await axiosService.get(RoutePaths.getTasksByUserId + id);
     return response.data;
   } catch (error) {
-    // Handle cancellation error if the request was aborted
     if (error.name === "AbortError") {
       console.log("Request was aborted");
     } else {
@@ -87,6 +67,6 @@ const TaskManagementApis = {
   getAllTasks,
   updateTask,
   getTaskById,
-  getTasksCreatedByUser
+  getTasksCreatedByUser,
 };
 export default TaskManagementApis;
