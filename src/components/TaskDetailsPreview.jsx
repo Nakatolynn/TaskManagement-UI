@@ -19,6 +19,9 @@ import {
   DialogActions,
   Snackbar,
   Tooltip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -40,29 +43,29 @@ const STATUS_MAP = {
   0: {
     label: "Open",
     color: "default",
-    description: "Task has been created but not started",
+    description: "Open",
   },
   1: {
     label: "Pending",
     color: "warning",
-    description: "Task is waiting for action",
+    description: "Pending Action",
   },
   2: {
     label: "In Progress",
     color: "primary",
-    description: "Task is currently being worked on",
+    description: "In-Progress",
   },
   3: {
     label: "In Review",
     color: "secondary",
-    description: "Task is under review",
+    description: "In Review",
   },
   4: {
     label: "Completed",
     color: "success",
-    description: "Task has been completed",
+    description: "Task  completed",
   },
-  5: { label: "Closed", color: "success", description: "Task has been closed" },
+  5: { label: "Closed", color: "success", description: "Task Closed" },
 };
 
 export default function TaskDetailsPreview({ user, onLogout }) {
@@ -251,290 +254,73 @@ export default function TaskDetailsPreview({ user, onLogout }) {
           onClick={handleBack}
           startIcon={<ArrowBack />}
           variant="outlined"
-          sx={{ borderRadius: "8px", textTransform: "none" }}
+          sx={{ borderRadius: "8px", color:"#1e3c72"}}
         >
           Back to Task List
         </Button>
-        <Typography variant="h4" fontWeight="bold" color="primary">
+        <Typography variant="h5" fontWeight="bold" color="#1e3c72">
           Task Details
         </Typography>
         <Box sx={{ width: 140 }} />
       </Box>
-
-      <Grid container spacing={3}>
-        {/* Main Task Information */}
-        <Grid item xs={12} lg={8}>
-          <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ mb: 3 }}>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  gutterBottom
-                  color="primary"
-                >
-                  {task.taskName || "Unnamed Task"}
+      <Grid item xs={12}>
+        <Accordion expanded>
+          <AccordionDetails>
+            <Grid container spacing={1}>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle2">
+                  <b>Task Name</b>
                 </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontSize: "1.1rem",
-                    lineHeight: 1.6,
-                    color: "text.secondary",
-                  }}
-                >
+                <Typography> {task.taskName || "Unnamed Task"}</Typography>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle2">
+                  <b> Task Description:</b>
+                </Typography>
+                <Typography>
+                  {" "}
                   {task.description || "No description provided"}
                 </Typography>
-              </Box>
-
-              {/* Status Section */}
-              <Box sx={{ mb: 4, p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                >
-                  <CheckCircle color="primary" />
-                  Status
-                  <Tooltip title={statusInfo.description}>
-                    <Info fontSize="small" />
-                  </Tooltip>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle2">
+                  <b>Due Date</b>
                 </Typography>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Chip
-                    label={statusInfo.label}
-                    color={statusInfo.color}
-                    size="medium"
-                    sx={{ fontWeight: "bold", fontSize: "0.9rem" }}
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    {statusInfo.description}
-                  </Typography>
-                </Stack>
-              </Box>
-
-              {/* Timeline Information */}
-              <Box sx={{ mb: 4 }}>
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                >
-                  <CalendarToday color="primary" />
-                  Timeline
+                <Typography> {formatDate(task.dueDate)}</Typography>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle2">
+                  <b>Status</b>
                 </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Stack spacing={2}>
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          display="block"
-                          gutterBottom
-                        >
-                          Created Date
-                        </Typography>
-                        <Typography variant="body1" fontWeight="medium">
-                          {formatDate(task.createdAt)}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          display="block"
-                          gutterBottom
-                        >
-                          Due Date
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          fontWeight="medium"
-                          color={
-                            task.dueDate ? "text.primary" : "text.secondary"
-                          }
-                        >
-                          {formatDate(task.dueDate)}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Stack spacing={2}>
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          display="block"
-                          gutterBottom
-                        >
-                          Submission Date
-                        </Typography>
-                        <Typography variant="body1" fontWeight="medium">
-                          {formatDate(task.submissionDate)}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          display="block"
-                          gutterBottom
-                        >
-                          Review Date
-                        </Typography>
-                        <Typography variant="body1" fontWeight="medium">
-                          {formatDate(task.reviewDate)}
-                        </Typography>
-                      </Box>
-                      {task.completionDate && (
-                        <Box>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                            gutterBottom
-                          >
-                            Completion Date
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            fontWeight="medium"
-                            color="success.main"
-                          >
-                            {formatDate(task.completionDate)}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Stack>
-                  </Grid>
-                </Grid>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Sidebar */}
-        <Grid item xs={12} lg={4}>
-          <Stack spacing={3}>
-            {/* Task Metadata */}
-            <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
-              <CardContent sx={{ p: 3 }}>
                 <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                  fontWeight="bold"
+                  sx={{
+                    backgroundColor: "teal",
+                    color: "white",
+                    px: 1,
+                    borderRadius: 20,
+                    display: "inline-block",
+                    textAlign: "center",
+                    minWidth: 80,
+                  }}
                 >
-                  <Assignment color="primary" /> Task Information
+                  {statusInfo.description}
+                </Typography>{" "}
+                <Typography variant="subtitle2">
+                  <b>Created By</b>: {user.userName}
                 </Typography>
-                <Stack spacing={2}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography variant="caption" color="text.secondary">
-                      Task ID
-                    </Typography>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="body2" fontFamily="monospace">
-                        {task.taskId}
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => copyToClipboard(task.taskId)}
-                      >
-                        <ContentCopy fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  </Box>
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography variant="caption" color="text.secondary">
-                      Completion Status
-                    </Typography>
-                    <Chip
-                      label={task.isComplete ? "Completed" : "Incomplete"}
-                      color={task.isComplete ? "success" : "warning"}
-                      size="small"
-                    />
-                  </Box>
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography variant="caption" color="text.secondary">
-                      Number of Subtasks
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {task.subTasks ? task.subTasks.length : 0}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-
-            {/* Assigned User */}
-            <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                >
-                  <Person color="primary" /> Assigned User
-                </Typography>
-                <Stack spacing={2}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      User ID
-                    </Typography>
-                    <Typography variant="body2" fontFamily="monospace">
-                      {task.userId}
-                    </Typography>
-                  </Box>
-                  {user && (
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Current User
-                      </Typography>
-                      <Typography variant="body1" fontWeight="medium">
-                        {user.userName}
-                      </Typography>
-                    </Box>
-                  )}
-                </Stack>
-              </CardContent>
-            </Card>
-          </Stack>
-        </Grid>
+              </Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
       </Grid>
 
-      {/* Subtasks */}
       {Array.isArray(task.subTasks) && task.subTasks.length > 0 ? (
         <Card sx={{ mt: 3, borderRadius: 3, boxShadow: 2 }}>
-          <CardContent sx={{ p: 4 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 3,
-              }}
-            >
-              <Typography
-                variant="h5"
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              >
-                <Subtitles color="primary" /> Subtasks ({task.subTasks.length})
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Manage individual subtasks
-              </Typography>
-            </Box>
+          <CardContent sx={{ p: 2 }}>
+            <Typography variant="subtitle2">
+              <b>Subtasks Details ({task.subTasks.length})</b>
+            </Typography>
 
             <Grid container spacing={2}>
               {task.subTasks.map((subtask) => {
@@ -605,99 +391,27 @@ export default function TaskDetailsPreview({ user, onLogout }) {
 
                       {/* Subtask Info */}
                       <Box sx={{ mb: 2, pr: 4 }}>
-                        <Typography variant="h6" fontWeight="600">
-                          {subtask.taskName}
+                        <Typography variant="subtitle2">
+                          <b>SubTask Name</b>: {subtask.taskName}
+                        </Typography>
+                        <Typography variant="subtitle2">
+                          <b>SubTask Description</b>:{" "}
+                          {subtask.description || "No description provided"}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Due Date: {formatDate(subtask.dueDate)}
+                        </Typography>
+                        <Typography variant="subtitle2">
+                          <b>Created By</b>: {user.userName}
+                        </Typography>
+                        <Typography variant="subtitle2">
+                          <b>Status</b>:
                         </Typography>
                         <Chip
                           label={subtaskStatus.label}
                           color={subtaskStatus.color}
                           size="small"
                         />
-                      </Box>
-
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 2 }}
-                      >
-                        {subtask.description || "No description provided"}
-                      </Typography>
-
-                      <Stack spacing={1}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Typography variant="caption" color="text.secondary">
-                            Due Date:
-                          </Typography>
-                          <Typography variant="caption" fontWeight="medium">
-                            {formatDate(subtask.dueDate)}
-                          </Typography>
-                        </Box>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Typography variant="caption" color="text.secondary">
-                            Created:
-                          </Typography>
-                          <Typography variant="caption" fontWeight="medium">
-                            {formatDate(subtask.createdAt)}
-                          </Typography>
-                        </Box>
-                        {subtask.completionDate && (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Completed:
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              fontWeight="medium"
-                              color="success.main"
-                            >
-                              {formatDate(subtask.completionDate)}
-                            </Typography>
-                          </Box>
-                        )}
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Typography variant="caption" color="text.secondary">
-                            Assigned To:
-                          </Typography>
-                          <Typography variant="caption" fontWeight="medium">
-                            {subtask.assignedTo}
-                          </Typography>
-                        </Box>
-                      </Stack>
-
-                      <Box
-                        sx={{
-                          mt: 2,
-                          pt: 1,
-                          borderTop: 1,
-                          borderColor: "divider",
-                        }}
-                      >
-                        <Typography variant="caption" color="text.secondary">
-                          Subtask ID: {subtask.taskId}
-                        </Typography>
                       </Box>
                     </Paper>
                   </Grid>
@@ -709,7 +423,7 @@ export default function TaskDetailsPreview({ user, onLogout }) {
       ) : (
         <Typography
           variant="h6"
-          color="text.secondary"
+          color="black"
           sx={{ mt: 3, textAlign: "center" }}
         >
           No subtasks available
