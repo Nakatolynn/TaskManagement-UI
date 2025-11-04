@@ -18,10 +18,24 @@ import {
   InputAdornment,
   CircularProgress,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import AddTaskIcon from "@mui/icons-material/AddTask";
-import { Search, FilterList, Edit, Visibility } from "@mui/icons-material";
-
+import {
+  Search,
+  FilterList,
+  Edit,
+  Visibility,
+  Delete,
+} from "@mui/icons-material";
+import TaskForm from "../components/TaskForm";
+import TaskDetailsPreview from "../components/TaskDetailsPreview";
+import TaskManagementApis from "../api/TaskManagementApis";
+import { useNavigate } from "react-router-dom";
 const STATUS_MAP = {
   0: { label: "Pending", color: "default" },
   1: { label: "In Progress", color: "primary" },
@@ -49,6 +63,7 @@ export default function UserTaskTable({
   tasks = [],
   onView,
   onEdit,
+  user,
   loading = false,
 }) {
   const [page, setPage] = useState(0);
@@ -57,6 +72,19 @@ export default function UserTaskTable({
   const [orderBy, setOrderBy] = useState("createdAt");
   const [searchTerm, setSearchTerm] = useState("");
   const tasksData = Array.isArray(tasks) ? tasks : [];
+  const [openTaskForm, setOpenTaskForm] = useState(false);
+  const [taskDetails, setTaskDetails] = useState(false);
+  const handleOpen = () => setOpenTaskForm(true);
+  const handleClose = () => setOpenTaskForm(false);
+  const handleOpenDetails = () => setTaskDetails(true);
+  const handleCloseDetails = () => setTaskDetails(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [noOfPreviousChanges, setNoOfChangesOnTask] = useState(0);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
+  const navigate = useNavigate();
 
   const processedTasks = useMemo(() => {
     let filteredTasks = tasksData;
@@ -135,7 +163,29 @@ export default function UserTaskTable({
       </Paper>
     );
   }
-  console.log("Tasks Data:", tasks);
+
+  const handleDeleteTask = (id) => {
+    return TaskManagementApis.deleteTask(id)
+      .then((result) => {
+        if (result) {
+          setSnackbarMessage("Task deleted successfully.");
+          setSnackbarOpen(true);
+          setNoOfChangesOnTask((prev) => prev + 1);
+          navigate(`/dashboard/${user}`);
+        }
+        return result;
+      })
+      .catch((error) => {
+        setSnackbarMessage("Failed to delete task. Please try again.");
+        setSnackbarOpen(true);
+        console.error("Error deleting task:", error);
+        throw error;
+      });
+  };
+
+  console.log("User-Id:", user);
+  console.log("selected:", selectedTask);
+
   return (
     <Paper
       elevation={0}
@@ -153,7 +203,7 @@ export default function UserTaskTable({
         sx={{
           p: 4,
           pb: 3,
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "linear-gradient(135deg, #1e3c72  0%, #1e3c72  100%)",
           color: "white",
           position: "relative",
           overflow: "hidden",
@@ -184,7 +234,7 @@ export default function UserTaskTable({
               color: "transparent",
             }}
           >
-            Task Management
+            Task Management Application
           </Typography>
           <Typography
             variant="h6"
@@ -264,6 +314,7 @@ export default function UserTaskTable({
             variant="contained"
             color="primary"
             startIcon={<AddTaskIcon />}
+            onClick={handleOpen}
             sx={{
               borderRadius: "12px",
               textTransform: "none",
@@ -271,14 +322,7 @@ export default function UserTaskTable({
               px: 4,
               py: 1.2,
               fontSize: "1rem",
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              boxShadow: "0 4px 14px 0 rgba(102, 126, 234, 0.3)",
-              "&:hover": {
-                background: "linear-gradient(135deg, #764ba2 0%, #667eea 100%)",
-                boxShadow: "0 6px 20px 0 rgba(102, 126, 234, 0.4)",
-                transform: "translateY(-1px)",
-              },
-              transition: "all 0.3s ease",
+              background: "linear-gradient(135deg, #1e3c72  0%, #1e3c72  100%)",
             }}
           >
             Create New Task
@@ -505,7 +549,13 @@ export default function UserTaskTable({
                         <IconButton
                           size="small"
                           color="primary"
-                          onClick={() => onView && onView(task)}
+                          onClick={() => {
+                            sessionStorage.setItem(
+                              "selectedTask",
+                              JSON.stringify(task)
+                            );
+                            navigate(`/task-preview/${task.taskId}`);
+                          }}
                           sx={{
                             backgroundColor: "primary.light",
                             color: "white",
@@ -518,6 +568,29 @@ export default function UserTaskTable({
                           }}
                         >
                           <Visibility fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Delete Task" arrow>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => {
+                            setTaskToDelete(task.taskId);
+                            setConfirmDialogOpen(true);
+                          }}
+                          sx={{
+                            backgroundColor: "error.light",
+                            color: "white",
+                            "&:hover": {
+                              backgroundColor: "error.main",
+                              transform: "scale(1.1)",
+                            },
+                            transition: "all 0.2s ease",
+                            borderRadius: "8px",
+                          }}
+                        >
+                          <Delete fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -556,7 +629,7 @@ export default function UserTaskTable({
                         variant="contained"
                         color="primary"
                         startIcon={<AddTaskIcon />}
-                        // onClick={onCreate}
+                        onClick={handleOpen}
                         sx={{
                           borderRadius: "10px",
                           textTransform: "none",
@@ -598,6 +671,81 @@ export default function UserTaskTable({
           }}
         />
       )}
+      {openTaskForm && (
+        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
+          <DialogContent dividers>
+            <TaskForm onClose={handleClose} user={user} />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {selectedTask && (
+        <TaskDetailsPreview
+          onClose={handleCloseDetails}
+          user={user}
+          tasks={selectedTask}
+        />
+      )}
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+      >
+        <DialogTitle>Confirm Task Deletion</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            Are you sure you want to delete this task? This action cannot be
+            undone. All the SubTasks Under it will be deleted as Well
+          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+            <Button
+              onClick={() => setConfirmDialogOpen(false)}
+              variant="outlined"
+              color="primary"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                handleDeleteTask(taskToDelete)
+                  .then(() => {
+                    setSnackbarMessage("Task deleted successfully!");
+                    setSnackbarOpen(true);
+                    setConfirmDialogOpen(false);
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 1500);
+                  })
+                  .catch(() => {
+                    setSnackbarMessage(
+                      "Failed to delete task. Please try again."
+                    );
+                    setSnackbarOpen(true);
+                    setConfirmDialogOpen(false);
+                  });
+              }}
+              variant="contained"
+              color="error"
+            >
+              Delete
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity="info"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 }

@@ -1,102 +1,151 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
-  Paper,
-  TextField,
-  MenuItem,
   Button,
-  Typography,
+  Fade,
   Grid,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
+  Paper,
+  Typography,
+  TextField,
   InputAdornment,
+  Checkbox,
+  FormControlLabel,
+  Zoom,
+  Select,
+  MenuItem,
   FormControl,
   InputLabel,
-  Select,
-  FormHelperText,
-  Fade,
-  Zoom,
+  IconButton,
+  Divider,
+  Tooltip,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
-  Description,
-  Title,
-  Assignment,
-  Schedule,
-  Person,
-  Save,
-  Cancel,
   AddTask,
   Edit,
+  Title,
+  Description,
+  Assignment,
+  Schedule,
+  Save,
+  Cancel,
+  Delete,
+  Add,
 } from "@mui/icons-material";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import TaskManagementApis from "../api/TaskManagementApis";
+import { useNavigate } from "react-router-dom";
 
-// user statuses
 const STATUS_OPTIONS = [
-  { value: 0, label: "Pending", color: "default", icon: "⏳" },
-  { value: 1, label: "In Progress", color: "primary", icon: "🚧" },
-  { value: 2, label: "In Review", color: "warning", icon: "👀" },
-  { value: 3, label: "Completed", color: "success", icon: "✅" },
-  { value: 4, label: "Closed", color: "success", icon: "✅" },
+  { label: "Open", value: 0 },
+  { label: "Pending", value: 1 },
+  { label: "In Progress", value: 2 },
+  { label: "In Review", value: 3 },
+  { label: "Completed", value: 4 },
+  { label: "Closed", value: 5 },
 ];
 
-const validationSchema = Yup.object({
-  taskName: Yup.string()
-    .required("Task name is required")
-    .min(3, "Task name must be at least 3 characters")
-    .max(100, "Task name must be less than 100 characters"),
-  description: Yup.string()
-    .required("Description is required")
-    .min(10, "Description must be at least 10 characters")
-    .max(500, "Description must be less than 500 characters"),
-  status: Yup.number()
-    .required("Status is required")
-    .min(0, "Invalid status")
-    .max(3, "Invalid status"),
-});
-
-export default function TaskForm({ task, onDone, userId }) {
-  const isEditing = Boolean(task?.taskId);
-
+export default function TaskForm({
+  isEditing = false,
+  initialData = {},
+  onSubmit,
+  onClose,
+  user,
+}) {
+  const [subTasks, setSubTasks] = useState(initialData.subTasks || []);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [noOfPreviousChanges, setNoOfChangesOnTask] = useState(0);
+  const navigate = useNavigate();
   const formik = useFormik({
     initialValues: {
-      taskName: task?.taskName || "",
-      description: task?.description || "",
-      status: task?.status ?? 0,
-      userId: userId || "",
+      taskName: initialData.taskName || "",
+      description: initialData.description || "",
+      dueDate: initialData.dueDate || "",
+      isComplete: initialData.isComplete || false,
+      status: initialData.status ?? 0,
+      userId: user,
     },
-    validationSchema,
-    onSubmit: async (values, { setSubmitting }) => {
-      try {
-      } catch (error) {
-        console.error("Error submitting form:", error);
-      } finally {
-        setSubmitting(false);
-      }
+    validationSchema: Yup.object({
+      taskName: Yup.string().required("Task Name is required"),
+      description: Yup.string().max(500, "Max 500 characters allowed"),
+      dueDate: Yup.date().nullable(),
+      status: Yup.number().required("Status is required"),
+    }),
+    onSubmit: (values, { resetForm }) => {
+      setLoading(true);
+      const fullTask = {
+        ...values,
+        subTasks,
+      };
+
+      TaskManagementApis.createTask(fullTask)
+        .then((result) => {
+          if (result) {
+            setSnackbarMessage("Task Added Successfully.");
+            setSnackbarOpen(true);
+            setNoOfChangesOnTask((prev) => prev + 1);
+            window.location.reload();
+            navigate(`/dashboard/${user}`);
+            if (onSubmit) {
+              onSubmit(fullTask);
+            }
+          }
+        })
+        .catch((error) => {
+          setSnackbarMessage("Failed to create task. Please try again.");
+          setSnackbarOpen(true);
+          console.error("Error creating task:", error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     },
   });
 
-  const getStatusInfo = (statusValue) => {
-    return (
-      STATUS_OPTIONS.find((option) => option.value === statusValue) ||
-      STATUS_OPTIONS[0]
-    );
+  const handleAddSubTask = () => {
+    setSubTasks([
+      ...subTasks,
+      {
+        taskName: "",
+        description: "",
+        dueDate: "",
+        status: 0,
+        userId: user,
+      },
+    ]);
   };
 
-  const currentStatus = getStatusInfo(formik.values.status);
+  const handleSubTaskChange = (index, field, value) => {
+    const updated = [...subTasks];
+    updated[index][field] = value;
+    setSubTasks(updated);
+  };
+
+  const handleRemoveSubTask = (index) => {
+    setSubTasks(subTasks.filter((_, i) => i !== index));
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
 
   return (
     <Fade in timeout={500}>
-      <Box sx={{ maxWidth: 800, margin: "0 auto" }}>
+      <Box sx={{ maxWidth: 900, margin: "0 auto" }}>
         {/* Header */}
         <Paper
           elevation={0}
           sx={{
             p: 3,
             mb: 3,
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            background: "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
             color: "white",
             borderRadius: 3,
           }}
@@ -119,13 +168,13 @@ export default function TaskForm({ task, onDone, userId }) {
               </Box>
             </Zoom>
             <Box>
-              <Typography variant="h4" component="h1" fontWeight="bold">
+              <Typography variant="h6" component="h1" fontWeight="bold">
                 {isEditing ? "Edit Task" : "Create New Task"}
               </Typography>
               <Typography variant="body1" sx={{ opacity: 0.9, mt: 0.5 }}>
                 {isEditing
-                  ? "Update your task details below"
-                  : "Fill in the details to create a new task"}
+                  ? "Modify existing task details below"
+                  : "Provide all necessary details to create a new task."}
               </Typography>
             </Box>
           </Box>
@@ -133,18 +182,16 @@ export default function TaskForm({ task, onDone, userId }) {
 
         <Grid container spacing={3}>
           {/* Form Section */}
-          <Grid item xs={12} md={8}>
-            <Paper
-              elevation={2}
-              sx={{
-                p: 4,
-                borderRadius: 3,
-                background: "white",
-              }}
-            >
+          <Grid item xs={12}>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Create Task Form
+              </Typography>
+              <Divider sx={{ mb: 3 }} />
+
               <form onSubmit={formik.handleSubmit}>
                 <Grid container spacing={3}>
-                  {/* Task Name */}
+                  {/* Task Title */}
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -153,7 +200,6 @@ export default function TaskForm({ task, onDone, userId }) {
                       label="Task Name"
                       value={formik.values.taskName}
                       onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
                       error={
                         formik.touched.taskName &&
                         Boolean(formik.errors.taskName)
@@ -161,20 +207,6 @@ export default function TaskForm({ task, onDone, userId }) {
                       helperText={
                         formik.touched.taskName && formik.errors.taskName
                       }
-                      variant="outlined"
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Title color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 2,
-                          backgroundColor: "grey.50",
-                        },
-                      }}
                     />
                   </Grid>
 
@@ -184,12 +216,11 @@ export default function TaskForm({ task, onDone, userId }) {
                       fullWidth
                       id="description"
                       name="description"
-                      label="Description"
+                      label="Task Description"
                       multiline
-                      rows={4}
+                      rows={3}
                       value={formik.values.description}
                       onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
                       error={
                         formik.touched.description &&
                         Boolean(formik.errors.description)
@@ -199,265 +230,244 @@ export default function TaskForm({ task, onDone, userId }) {
                           ? formik.errors.description
                           : `${formik.values.description.length}/500 characters`
                       }
-                      variant="outlined"
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment
-                            position="start"
-                            sx={{ alignSelf: "flex-start", mt: 1.5 }}
-                          >
-                            <Description color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 2,
-                          backgroundColor: "grey.50",
-                        },
-                      }}
                     />
                   </Grid>
 
-                  {/* Status */}
-                  <Grid item xs={12}>
-                    <FormControl
-                      fullWidth
-                      error={
-                        formik.touched.status && Boolean(formik.errors.status)
-                      }
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 2,
-                          backgroundColor: "grey.50",
-                        },
-                      }}
-                    >
-                      <InputLabel id="status-label">Status</InputLabel>
+                  {/* Status & Due Date */}
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>Status</InputLabel>
                       <Select
-                        labelId="status-label"
                         id="status"
                         name="status"
                         value={formik.values.status}
                         onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
                         label="Status"
-                        startAdornment={
-                          <InputAdornment position="start" sx={{ ml: 1 }}>
-                            <Assignment color="action" />
-                          </InputAdornment>
+                        error={
+                          formik.touched.status && Boolean(formik.errors.status)
                         }
                       >
                         {STATUS_OPTIONS.map((option) => (
                           <MenuItem key={option.value} value={option.value}>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
-                            >
-                              <span>{option.icon}</span>
-                              <span>{option.label}</span>
-                            </Box>
+                            {option.label}
                           </MenuItem>
                         ))}
                       </Select>
-                      {formik.touched.status && formik.errors.status && (
-                        <FormHelperText>{formik.errors.status}</FormHelperText>
-                      )}
                     </FormControl>
                   </Grid>
 
-                  {/* Action Buttons */}
-                  <Grid item xs={12}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 2,
-                        justifyContent: "flex-end",
-                        pt: 2,
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      id="dueDate"
+                      name="dueDate"
+                      label="Due Date"
+                      type="date"
+                      value={formik.values.dueDate}
+                      onChange={formik.handleChange}
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Schedule color="primary" />
+                          </InputAdornment>
+                        ),
                       }}
-                    >
-                      <Button
-                        type="button"
-                        variant="outlined"
-                        size="large"
-                        onClick={onDone}
-                        startIcon={<Cancel />}
-                        sx={{
-                          borderRadius: 2,
-                          textTransform: "none",
-                          fontWeight: 600,
-                          px: 4,
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        variant="contained"
-                        size="large"
-                        disabled={formik.isSubmitting}
-                        startIcon={
-                          formik.isSubmitting ? <Schedule /> : <Save />
-                        }
-                        sx={{
-                          borderRadius: 2,
-                          textTransform: "none",
-                          fontWeight: 600,
-                          px: 4,
-                          background:
-                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                          "&:hover": {
-                            background:
-                              "linear-gradient(135deg, #764ba2 0%, #667eea 100%)",
-                            transform: "translateY(-1px)",
-                            boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
-                          },
-                          transition: "all 0.3s ease",
-                        }}
-                      >
-                        {formik.isSubmitting
-                          ? "Saving..."
-                          : isEditing
-                          ? "Update Task"
-                          : "Create Task"}
-                      </Button>
-                    </Box>
+                    />
                   </Grid>
                 </Grid>
+
+                {/* Subtasks Section */}
+                <Divider sx={{ my: 4 }} />
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={1}
+                >
+                  <Typography variant="h6" fontWeight="bold">
+                    Subtasks
+                  </Typography>
+                  <Tooltip title="Add Subtask">
+                    <IconButton
+                      color="primary"
+                      onClick={handleAddSubTask}
+                      sx={{
+                        border: "1px solid #ccc",
+                        "&:hover": { backgroundColor: "#e3f2fd" },
+                      }}
+                    >
+                      <Add />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+
+                {subTasks.length === 0 && (
+                  <Typography variant="body2" color="text.secondary" mb={2}>
+                    No subtasks added yet. Click the "+" button to create one.
+                  </Typography>
+                )}
+
+                {subTasks.map((subTask, index) => (
+                  <Paper
+                    key={index}
+                    sx={{
+                      p: 2,
+                      mt: 2,
+                      borderRadius: 2,
+                      backgroundColor: "#f8f9fa",
+                    }}
+                  >
+                    <Grid container spacing={2}>
+                      <Grid item xs={11}>
+                        <TextField
+                          fullWidth
+                          label="Subtask Title"
+                          value={subTask.taskName}
+                          onChange={(e) =>
+                            handleSubTaskChange(
+                              index,
+                              "taskName",
+                              e.target.value
+                            )
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Assignment color="primary" />
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={2}
+                          label="Subtask Description"
+                          sx={{ mt: 1 }}
+                          value={subTask.description}
+                          onChange={(e) =>
+                            handleSubTaskChange(
+                              index,
+                              "description",
+                              e.target.value
+                            )
+                          }
+                        />
+                        <Grid container spacing={2} sx={{ mt: 1 }}>
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              fullWidth
+                              type="date"
+                              label="Due Date"
+                              InputLabelProps={{ shrink: true }}
+                              value={subTask.dueDate}
+                              onChange={(e) =>
+                                handleSubTaskChange(
+                                  index,
+                                  "dueDate",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <FormControl fullWidth>
+                              <InputLabel>Status</InputLabel>
+                              <Select
+                                value={subTask.status || ""}
+                                label="Status"
+                                onChange={(e) =>
+                                  handleSubTaskChange(
+                                    index,
+                                    "status",
+                                    e.target.value
+                                  )
+                                }
+                              >
+                                {STATUS_OPTIONS.map((option) => (
+                                  <MenuItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Grid>
+                        </Grid>
+                      </Grid>
+                      <Grid
+                        item
+                        xs={1}
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                      >
+                        <Tooltip title="Remove Subtask">
+                          <IconButton
+                            color="error"
+                            onClick={() => handleRemoveSubTask(index)}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Tooltip>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                ))}
+
+                <Box mt={4} display="flex" justifyContent="flex-end" gap={2}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Cancel />}
+                    onClick={onClose}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    startIcon={<Save />}
+                    disabled={loading}
+                    sx={{
+                      background:
+                        "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
+                      "&:hover": {
+                        background:
+                          "linear-gradient(135deg, #2a5298 0%, #1e3c72 100%)",
+                      },
+                    }}
+                  >
+                    {loading
+                      ? "Saving..."
+                      : isEditing
+                      ? "Update Task"
+                      : "Create Task"}
+                  </Button>
+                </Box>
               </form>
             </Paper>
           </Grid>
-
-          {/* Preview Section */}
-          <Grid item xs={12} md={4}>
-            <Box sx={{ position: "sticky", top: 20 }}>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 3,
-                  borderRadius: 3,
-                  background: "white",
-                }}
-              >
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Task Preview
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-
-                {/* Task Preview Card */}
-                <Card
-                  variant="outlined"
-                  sx={{
-                    borderRadius: 2,
-                    border: "2px solid",
-                    borderColor: "grey.200",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      borderColor: "primary.main",
-                      transform: "translateY(-2px)",
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                    },
-                  }}
-                >
-                  <CardContent>
-                    {/* Status Chip */}
-                    <Box sx={{ mb: 2 }}>
-                      <Chip
-                        label={currentStatus.label}
-                        color={currentStatus.color}
-                        icon={<span>{currentStatus.icon}</span>}
-                        variant="filled"
-                        sx={{ fontWeight: 600 }}
-                      />
-                    </Box>
-
-                    {/* Task Name */}
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
-                      {formik.values.taskName || "Your Task Name"}
-                    </Typography>
-
-                    {/* Description */}
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mb: 2,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {formik.values.description ||
-                        "Task description will appear here..."}
-                    </Typography>
-
-                    {/* Metadata */}
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Person
-                          sx={{ fontSize: 16, color: "text.secondary" }}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                          Assigned to: {userId ? "You" : "Not assigned"}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Schedule
-                          sx={{ fontSize: 16, color: "text.secondary" }}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                          Created: {isEditing ? "Editing" : "New"}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-                <Box
-                  sx={{
-                    mt: 3,
-                    p: 2,
-                    backgroundColor: "grey.50",
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight="bold"
-                    gutterBottom
-                  >
-                    Form Status
-                  </Typography>
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                  >
-                    <Chip
-                      label={formik.isValid ? "Valid" : "Invalid"}
-                      color={formik.isValid ? "success" : "error"}
-                      size="small"
-                      variant="outlined"
-                    />
-                    <Chip
-                      label={formik.dirty ? "Unsaved changes" : "No changes"}
-                      color={formik.dirty ? "warning" : "default"}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </Box>
-                </Box>
-              </Paper>
-            </Box>
-          </Grid>
         </Grid>
+
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity="success"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </Box>
     </Fade>
   );

@@ -62,11 +62,21 @@ const getTasksCreatedByUser = async (id) => {
   }
 };
 
+const deleteTask = async (id) => {
+  try {
+    const response = await axiosService.delete(RoutePaths.deleteTask + id);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting task:", error);
+    throw error;
+  }
+};
 const TaskManagementApis = {
   createTask,
   getAllTasks,
   updateTask,
   getTaskById,
   getTasksCreatedByUser,
+  deleteTask,
 };
 export default TaskManagementApis;

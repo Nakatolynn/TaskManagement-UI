@@ -4,7 +4,6 @@ import {
   Routes,
   Route,
   Navigate,
-  useNavigate,
   useParams,
 } from "react-router-dom";
 import TaskDetail from "./components/TaskDetail";
@@ -15,51 +14,53 @@ import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import IconButton from "@mui/material/IconButton";
-import AddIcon from "@mui/icons-material/Add";
-import TaskTable from "./tables/TaskTable";
 import { Typography } from "@mui/material";
-import { Fade, Slide, Paper, Chip, Breadcrumbs } from "@mui/material";
+import { Fade, Slide, Paper, Chip } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import TaskManagementApis from "./api/TaskManagementApis";
 import UserTaskTable from "./tables/UserTaskTable";
-function MainApp({ user }) {
+import { CircularProgress } from "@mui/material";
+import TaskDetailsPreview from "./components/TaskDetailsPreview";
+
+function MainApp({ user, onLogout }) {
+  // Add onLogout prop here
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [mode, setMode] = useState("list");
   const [editingTask, setEditingTask] = useState(null);
-  const [userDetails, setStoredUserDetails] = useState();
   const [greeting, setGreeting] = useState("");
   const [currentTime, setCurrentTime] = useState("");
   const { userId } = useParams();
   const [listofTasks, setListOfTasks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
     const fetchTasks = async () => {
       try {
+        setIsLoading(true);
         const result = await TaskManagementApis.getTasksCreatedByUser(
           user?.userId
         );
         setListOfTasks(result);
       } catch (error) {
-        if (error.name === "AbortError") {
-          console.error(error);
-        } else {
-          console.error(error);
-        }
+        console.error("Error fetching tasks:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchTasks();
+    if (user?.userId) {
+      fetchTasks();
+    } else {
+      setIsLoading(false); // Ensure loading stops even if no user
+    }
 
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [user?.userId]);
 
   useEffect(() => {
-    const storedUserDetails = JSON.parse(localStorage.getItem("user-details"));
-    setStoredUserDetails(storedUserDetails);
     const now = new Date();
     const ugandaTime = new Date(
       now.toLocaleString("en-US", { timeZone: "Africa/Kampala" })
@@ -106,7 +107,25 @@ function MainApp({ user }) {
     setSelectedTaskId(null);
     setEditingTask(null);
   }
-  console.log("tasks", listofTasks);
+
+  // Show loading state while user data is being verified
+  if (!user?.userName) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          background: "linear-gradient(135deg, #f5f7fa 0%, #dcdee1ff 100%)",
+        }}
+      >
+        <CircularProgress size={60} />
+        <Typography sx={{ ml: 2 }}>Loading user data...</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box
       sx={{
@@ -115,7 +134,8 @@ function MainApp({ user }) {
         background: "linear-gradient(135deg, #f5f7fa 0%, #dcdee1ff 100%)",
       }}
     >
-      <Sidebar user={user} />
+      {/* Pass onLogout to Sidebar and Topbar */}
+      <Sidebar user={user} onLogout={onLogout} />
 
       <Box
         sx={{
@@ -125,7 +145,7 @@ function MainApp({ user }) {
           overflow: "hidden",
         }}
       >
-        <Topbar />
+        <Topbar user={user} onLogout={onLogout} />
         <Box
           sx={{
             mb: 4,
@@ -148,7 +168,7 @@ function MainApp({ user }) {
           >
             <Box>
               <Typography
-                variant="h4"
+                variant="h5"
                 sx={{
                   fontWeight: 700,
                   background: "linear-gradient(45deg, #2D3748, #4A5568)",
@@ -158,20 +178,8 @@ function MainApp({ user }) {
                   mb: 1,
                 }}
               >
-                {greeting}, {user?.userName || "Guest"} 👋
+                Welcome, {user.userName}
               </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <AccessTimeIcon
-                  sx={{ fontSize: 16, color: "text.secondary" }}
-                />
-                <Typography
-                  variant="body1"
-                  color="text.secondary"
-                  sx={{ fontWeight: 500 }}
-                >
-                  {currentTime}
-                </Typography>
-              </Box>
             </Box>
             <Box
               sx={{
@@ -179,19 +187,7 @@ function MainApp({ user }) {
                 gap: 2,
                 flexWrap: "wrap",
               }}
-            >
-              <Chip
-                label="Ready to work"
-                color="success"
-                variant="outlined"
-                size="small"
-              />
-              <Chip
-                label={`Last active: ${new Date().toLocaleDateString()}`}
-                variant="outlined"
-                size="small"
-              />
-            </Box>
+            ></Box>
           </Box>
         </Box>
         <Container
@@ -205,7 +201,17 @@ function MainApp({ user }) {
         >
           <Fade in timeout={500}>
             <Box>
-              {mode === "list" && (
+              {isLoading ? (
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  height={200}
+                >
+                  <CircularProgress />
+                  <Typography sx={{ ml: 2 }}>Loading tasks...</Typography>
+                </Box>
+              ) : mode === "list" ? (
                 <Paper
                   elevation={0}
                   sx={{
@@ -217,21 +223,9 @@ function MainApp({ user }) {
                     boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
                   }}
                 >
-                  {/* <TaskTable
-                    onOpenDetail={openDetail}
-                    onCreate={openCreate}
-                    onEdit={openEdit}
-                    user={user}
-                  /> */}
-                  <UserTaskTable
-                    tasks={listofTasks}
-                    // onView={handleView}
-                    // onEdit={handleEdit}
-                  />
+                  <UserTaskTable tasks={listofTasks} user={user.userId} />
                 </Paper>
-              )}
-
-              {mode === "detail" && (
+              ) : mode === "detail" ? (
                 <Slide direction="left" in timeout={400}>
                   <Box>
                     <TaskDetail
@@ -241,9 +235,7 @@ function MainApp({ user }) {
                     />
                   </Box>
                 </Slide>
-              )}
-
-              {(mode === "create" || mode === "edit") && (
+              ) : (
                 <Slide direction="up" in timeout={400}>
                   <Paper
                     elevation={0}
@@ -270,28 +262,117 @@ function MainApp({ user }) {
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user-details"));
-    if (storedUser) setUser(storedUser);
+    console.log("Stored user on app start:", storedUser);
+
+    if (storedUser && storedUser.userId && storedUser.userName) {
+      setUser(storedUser);
+    } else {
+      console.log("No valid user found in localStorage");
+    }
+    setIsLoading(false);
   }, []);
 
-  if (user === null) {
-    return <div>Loading...</div>;
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("user-details", JSON.stringify(user));
+      console.log("User saved to localStorage:", user);
+    } else {
+      localStorage.removeItem("user-details");
+      localStorage.removeItem("token");
+      console.log("User cleared from localStorage");
+    }
+  }, [user]);
+
+  const handleLogout = () => {
+    console.log("Logging out...");
+    setUser(null);
+  };
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          // background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        }}
+      >
+        <CircularProgress sx={{ color: "white" }} size={60} />
+        <Typography sx={{ ml: 2, color: "white" }}>Loading app...</Typography>
+      </Box>
+    );
   }
+
+  console.log("Current user state:", user);
 
   return (
     <Router>
       <Routes>
         <Route
-          path="/login"
-          element={<Login onLogin={setUser} user={user} />}
+          path="/"
+          element={
+            user ? (
+              <Navigate to={`/dashboard/${user.userId}`} replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
         />
-        <Route path="/register" element={<Register onRegister={setUser} />} />
-        <Route path="/home/:userId" element={<MainApp user={user} />} />
+        <Route
+          path="/login"
+          element={
+            user ? (
+              <Navigate to={`/dashboard/${user.userId}`} replace />
+            ) : (
+              <Login onLogin={setUser} user={user} />
+            )
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            user ? (
+              <Navigate to={`/dashboard/${user.userId}`} replace />
+            ) : (
+              <Register onRegister={setUser} />
+            )
+          }
+        />
+        <Route
+          path="/dashboard/:userId"
+          element={
+            user ? (
+              <MainApp user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
         <Route
           path="/*"
-          element={<Navigate to={`/home/${user.userId}`} replace />}
+          element={
+            user ? (
+              <Navigate to={`/dashboard/${user.userId}`} replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/task-preview/:taskId"
+          element={
+            user ? (
+              <TaskDetailsPreview user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
         />
       </Routes>
     </Router>
