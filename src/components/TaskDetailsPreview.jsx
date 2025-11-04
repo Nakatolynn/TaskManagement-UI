@@ -20,7 +20,6 @@ import {
   Snackbar,
   Tooltip,
   Accordion,
-  AccordionSummary,
   AccordionDetails,
 } from "@mui/material";
 import {
@@ -36,8 +35,9 @@ import {
   Info,
   ContentCopy,
 } from "@mui/icons-material";
+import { TextField, MenuItem } from "@mui/material";
 import TaskManagementApis from "../api/TaskManagementApis";
-
+import EditTaskForm from "./EditTaskForm";
 // Status mapping with better labels
 const STATUS_MAP = {
   0: {
@@ -76,11 +76,14 @@ export default function TaskDetailsPreview({ user, onLogout }) {
   const [error, setError] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [subtaskToDelete, setSubtaskToDelete] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
+  const [editSubtask, setEditSubtask] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "Not set";
@@ -238,7 +241,6 @@ export default function TaskDetailsPreview({ user, onLogout }) {
   }
 
   const statusInfo = getStatusInfo(task.status, task.isComplete);
-
   return (
     <Box sx={{ p: 3, maxWidth: 1200, margin: "0 auto" }}>
       {/* Header */}
@@ -254,7 +256,7 @@ export default function TaskDetailsPreview({ user, onLogout }) {
           onClick={handleBack}
           startIcon={<ArrowBack />}
           variant="outlined"
-          sx={{ borderRadius: "8px", color:"#1e3c72"}}
+          sx={{ borderRadius: "8px", color: "#1e3c72" }}
         >
           Back to Task List
         </Button>
@@ -266,51 +268,93 @@ export default function TaskDetailsPreview({ user, onLogout }) {
       <Grid item xs={12}>
         <Accordion expanded>
           <AccordionDetails>
-            <Grid container spacing={1}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2">
-                  <b>Task Name</b>
-                </Typography>
-                <Typography> {task.taskName || "Unnamed Task"}</Typography>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                mb: 2,
+              }}
+            >
+              <Button
+                onClick={() => {
+                  setIsEditMode((_prev) => !_prev);
+                }}
+                startIcon={<Edit />}
+                variant="contained"
+                sx={{
+                  borderRadius: "8px",
+                  backgroundColor: "#1e3c72",
+                  color: "white",
+                  textTransform: "none",
+                  "&:hover": {
+                    backgroundColor: "#2a5298",
+                  },
+                }}
+              >
+                Edit Details
+              </Button>
+            </Box>
+            {isEditMode ? (
+              <EditTaskForm
+                taskDetails={task}
+                onClose={() => setIsEditMode(false)}
+                onSuccess={(updatedTask) => {
+                  setTask(updatedTask);
+                  setIsEditMode(false);
+                  setSnackbar({
+                    open: true,
+                    message: "Task updated successfully!",
+                    severity: "success",
+                  });
+                }}
+              />
+            ) : (
+              <Grid container spacing={1}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2">
+                    <b>Task Name</b>
+                  </Typography>
+                  <Typography> {task.taskName || "Unnamed Task"}</Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2">
+                    <b> Task Description:</b>
+                  </Typography>
+                  <Typography>
+                    {" "}
+                    {task.description || "No description provided"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2">
+                    <b>Due Date</b>
+                  </Typography>
+                  <Typography> {formatDate(task.dueDate)}</Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2">
+                    <b>Status</b>
+                  </Typography>
+                  <Typography
+                    fontWeight="bold"
+                    sx={{
+                      backgroundColor: "teal",
+                      color: "white",
+                      px: 1,
+                      borderRadius: 20,
+                      display: "inline-block",
+                      textAlign: "center",
+                      minWidth: 80,
+                    }}
+                  >
+                    {statusInfo.description}
+                  </Typography>{" "}
+                  <Typography variant="subtitle2">
+                    <b>Created By</b>: {user.userName}
+                  </Typography>
+                </Grid>
               </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2">
-                  <b> Task Description:</b>
-                </Typography>
-                <Typography>
-                  {" "}
-                  {task.description || "No description provided"}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2">
-                  <b>Due Date</b>
-                </Typography>
-                <Typography> {formatDate(task.dueDate)}</Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2">
-                  <b>Status</b>
-                </Typography>
-                <Typography
-                  fontWeight="bold"
-                  sx={{
-                    backgroundColor: "teal",
-                    color: "white",
-                    px: 1,
-                    borderRadius: 20,
-                    display: "inline-block",
-                    textAlign: "center",
-                    minWidth: 80,
-                  }}
-                >
-                  {statusInfo.description}
-                </Typography>{" "}
-                <Typography variant="subtitle2">
-                  <b>Created By</b>: {user.userName}
-                </Typography>
-              </Grid>
-            </Grid>
+            )}
           </AccordionDetails>
         </Accordion>
       </Grid>
@@ -339,7 +383,8 @@ export default function TaskDetailsPreview({ user, onLogout }) {
                         height: "100%",
                       }}
                     >
-                      {/* Action Buttons */}
+                      {/* Functional Buttons */}
+
                       <Box
                         sx={{
                           position: "absolute",
@@ -349,28 +394,21 @@ export default function TaskDetailsPreview({ user, onLogout }) {
                           gap: 1,
                         }}
                       >
-                        <IconButton
+                        <Button
                           size="small"
                           color="primary"
                           onClick={() => {
-                            sessionStorage.setItem(
-                              "selectedSubtask",
-                              JSON.stringify(subtask)
-                            );
-                            navigate(`/subtask-edit/${subtask.taskId}`);
+                            setEditSubtask(subtask);
+                            setEditDialogOpen(true);
                           }}
                           sx={{
-                            backgroundColor: "primary.light",
+                            backgroundColor: "#1e3c72",
                             color: "white",
-                            "&:hover": {
-                              backgroundColor: "primary.main",
-                              transform: "scale(1.1)",
-                            },
-                            transition: "all 0.2s ease",
                           }}
                         >
                           <Edit fontSize="small" />
-                        </IconButton>
+                        </Button>
+
                         <IconButton
                           size="small"
                           color="error"
@@ -449,7 +487,113 @@ export default function TaskDetailsPreview({ user, onLogout }) {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Edit Subtask</DialogTitle>
+        <DialogContent dividers>
+          {editSubtask && (
+            <Box
+              sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 2 }}
+            >
+              <TextField
+                label="Subtask Name"
+                fullWidth
+                value={editSubtask.taskName || ""}
+                onChange={(e) =>
+                  setEditSubtask({ ...editSubtask, taskName: e.target.value })
+                }
+              />
+              <TextField
+                label="Description"
+                multiline
+                rows={3}
+                fullWidth
+                value={editSubtask.description || ""}
+                onChange={(e) =>
+                  setEditSubtask({
+                    ...editSubtask,
+                    description: e.target.value,
+                  })
+                }
+              />
+              <TextField
+                label="Due Date"
+                type="datetime-local"
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                value={
+                  editSubtask.dueDate
+                    ? new Date(editSubtask.dueDate).toISOString().slice(0, 16)
+                    : ""
+                }
+                onChange={(e) =>
+                  setEditSubtask({ ...editSubtask, dueDate: e.target.value })
+                }
+              />
+              <TextField
+                select
+                label="Status"
+                fullWidth
+                value={editSubtask.status}
+                onChange={(e) =>
+                  setEditSubtask({
+                    ...editSubtask,
+                    status: Number(e.target.value),
+                  })
+                }
+              >
+                {Object.entries(STATUS_MAP).map(([key, value]) => (
+                  <MenuItem key={key} value={Number(key)}>
+                    {value.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={async () => {
+              try {
+                setLoading(true);
+                const updated = await TaskManagementApis.updateTask(
+                  editSubtask
+                );
+                setTask((prev) => ({
+                  ...prev,
+                  subTasks: prev.subTasks.map((st) =>
+                    st.taskId === editSubtask.taskId ? updated : st
+                  ),
+                }));
+                setSnackbar({
+                  open: true,
+                  message: "Subtask updated successfully!",
+                  severity: "success",
+                });
+                setEditDialogOpen(false);
+              } catch (error) {
+                console.error(error);
+                setSnackbar({
+                  open: true,
+                  message: "Failed to update subtask.",
+                  severity: "error",
+                });
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

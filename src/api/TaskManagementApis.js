@@ -23,10 +23,12 @@ const getAllTasks = async (data, signal) => {
   }
 };
 
-const updateTask = async (data, signal) => {
+const updateTask = async (data) => {
   try {
     const response = await axiosService.put(RoutePaths.updateTask, data, {
-      signal: signal,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     return response.data;
   } catch (error) {

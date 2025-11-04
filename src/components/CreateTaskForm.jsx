@@ -47,7 +47,7 @@ const STATUS_OPTIONS = [
   { label: "Closed", value: 5 },
 ];
 
-export default function TaskForm({
+export default function CreateTaskForm({
   isEditing = false,
   initialData = {},
   onSubmit,

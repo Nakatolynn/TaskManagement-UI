@@ -50,7 +50,7 @@ function MainApp({ user, onLogout }) {
     if (user?.userId) {
       fetchTasks();
     } else {
-      setIsLoading(false); // Ensure loading stops even if no user
+      setIsLoading(false);
     }
 
     return () => {
