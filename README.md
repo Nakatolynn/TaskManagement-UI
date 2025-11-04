@@ -9,15 +9,11 @@ Install and run
 
 ```bash
 npm install
-npm run dev
+npm start
 ```
 
 Run tests
 
 ```bash
 npm run test
-```
 
-Notes
-- The API client expects endpoints: GET /tasks, GET /tasks/:id, POST /tasks, PUT /tasks/:id, DELETE /tasks/:id
-- This scaffold uses fetch and no auth. If your API requires auth, update `src/api/client.js` to attach headers.

@@ -111,7 +111,13 @@ export default function Topbar({ user, onLogout }) {
               }}
             >
               {user?.userName?.charAt(0).toUpperCase() || "U"}
-            </Avatar>
+            </Avatar>{" "}
+            &nbsp; &nbsp;
+            <Box>
+              <Typography variant="h6" color="#1e3c72" fontWeight="600">
+                {user?.firstName || "User"} {user?.lastName || "User"}
+              </Typography>
+            </Box>
             <ExpandMore
               sx={{ fontSize: 18, color: "text.secondary", ml: 0.5 }}
             />

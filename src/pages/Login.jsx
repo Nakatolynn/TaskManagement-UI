@@ -57,6 +57,8 @@ export default function Login({ onLogin, user }) {
         userId: data.userId,
         userName: data.username,
         token: data.token,
+        firstName: data.firstName,
+        lastName: data.lastName,
       };
       localStorage.setItem("user-details", JSON.stringify(userData));
       onLogin && onLogin(userData);

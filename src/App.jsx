@@ -6,8 +6,6 @@ import {
   Navigate,
   useParams,
 } from "react-router-dom";
-import TaskDetail from "./components/TaskDetail";
-import TaskForm from "./components/TaskForm";
 import Login from "./pages/Login";
 import Register from "./pages/RegisterUser";
 import Sidebar from "./components/Sidebar";
@@ -86,22 +84,6 @@ function MainApp({ user, onLogout }) {
     setCurrentTime(formatted);
   }, []);
 
-  function openDetail(id) {
-    setSelectedTaskId(id);
-    setMode("detail");
-  }
-
-  function openCreate() {
-    setEditingTask(null);
-    setMode("create");
-  }
-
-  function openEdit(task) {
-    setEditingTask(task);
-    setMode("edit");
-    setSelectedTaskId(task.id);
-  }
-
   function backToList() {
     setMode("list");
     setSelectedTaskId(null);
@@ -178,7 +160,7 @@ function MainApp({ user, onLogout }) {
                   mb: 1,
                 }}
               >
-                Welcome, {user.userName}
+                Welcome, {user.firstName} {user.lastName}
               </Typography>
             </Box>
             <Box
@@ -223,21 +205,21 @@ function MainApp({ user, onLogout }) {
                     boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
                   }}
                 >
-                  <UserTaskTable tasks={listofTasks} user={user.userId} />
+                  <UserTaskTable tasks={listofTasks} user={user} />
                 </Paper>
               ) : mode === "detail" ? (
                 <Slide direction="left" in timeout={400}>
-                  <Box>
+                  {/* <Box>
                     <TaskDetail
                       id={selectedTaskId}
                       onBack={backToList}
                       onEdit={() => {}}
                     />
-                  </Box>
+                  </Box> */}
                 </Slide>
               ) : (
                 <Slide direction="up" in timeout={400}>
-                  <Paper
+                  {/* <Paper
                     elevation={0}
                     sx={{
                       p: 4,
@@ -249,7 +231,7 @@ function MainApp({ user, onLogout }) {
                     }}
                   >
                     <TaskForm task={editingTask} onDone={backToList} />
-                  </Paper>
+                  </Paper> */}
                 </Slide>
               )}
             </Box>

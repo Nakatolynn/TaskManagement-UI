@@ -148,7 +148,7 @@ export default function UserTaskTable({
     { id: "description", label: "Description", sortable: true, minWidth: 200 },
     { id: "status", label: "Status", sortable: true, minWidth: 120 },
     { id: "createdAt", label: "Created", sortable: true, minWidth: 150 },
-    { id: "updatedAt", label: "Updated", sortable: true, minWidth: 150 },
+    { id: "CreatedBy", label: "Created By", sortable: true, minWidth: 150 },
     { id: "actions", label: "Actions", sortable: false, minWidth: 100 },
   ];
 
@@ -171,7 +171,7 @@ export default function UserTaskTable({
           setSnackbarMessage("Task deleted successfully.");
           setSnackbarOpen(true);
           setNoOfChangesOnTask((prev) => prev + 1);
-          navigate(`/dashboard/${user}`);
+          navigate(`/dashboard/${user.userId}`);
         }
         return result;
       })
@@ -539,7 +539,7 @@ export default function UserTaskTable({
                       fontSize="0.8rem"
                       color="text.secondary"
                     >
-                      {formatDate(task.updatedAt)}
+                      {user.userName}
                     </Typography>
                   </TableCell>
 

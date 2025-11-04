@@ -121,8 +121,8 @@ const RegisterUser = () => {
       let errorMessage = "Registration failed. Please try again.";
       if (error?.response?.data?.message)
         errorMessage = error.response.data.message;
-      else if (error?.response?.status === 409)
-        errorMessage = "Username already exists.";
+      else if (error?.response?.status === 400)
+        errorMessage = "User already exists.";
       else if (error?.message) errorMessage = error.message;
 
       setSnackbar({ open: true, message: errorMessage, severity: "error" });

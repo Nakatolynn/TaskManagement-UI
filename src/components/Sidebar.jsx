@@ -71,7 +71,7 @@ export default function Sidebar({ user, onLogout }) {
           </Avatar>
           <Box>
             <Typography variant="h6" color="#1e3c72" fontWeight="600">
-              {user?.userName || "User"}
+              {user?.firstName || "User"} {user?.lastName || "User"}
             </Typography>
           </Box>
         </Box>

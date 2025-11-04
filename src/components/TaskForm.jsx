@@ -67,7 +67,8 @@ export default function TaskForm({
       dueDate: initialData.dueDate || "",
       isComplete: initialData.isComplete || false,
       status: initialData.status ?? 0,
-      userId: user,
+      userId: user?.userId,
+      createdByUser: user?.userName,
     },
     validationSchema: Yup.object({
       taskName: Yup.string().required("Task Name is required"),
@@ -89,7 +90,7 @@ export default function TaskForm({
             setSnackbarOpen(true);
             setNoOfChangesOnTask((prev) => prev + 1);
             window.location.reload();
-            navigate(`/dashboard/${user}`);
+            navigate(`/dashboard/${user?.userId}`);
             if (onSubmit) {
               onSubmit(fullTask);
             }
@@ -114,7 +115,7 @@ export default function TaskForm({
         description: "",
         dueDate: "",
         status: 0,
-        userId: user,
+        userId: user?.userId,
       },
     ]);
   };
@@ -135,7 +136,7 @@ export default function TaskForm({
     }
     setSnackbarOpen(false);
   };
-
+  console.log("user", user?.userId);
   return (
     <Fade in timeout={500}>
       <Box sx={{ maxWidth: 900, margin: "0 auto" }}>
@@ -435,10 +436,6 @@ export default function TaskForm({
                     sx={{
                       background:
                         "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
-                      "&:hover": {
-                        background:
-                          "linear-gradient(135deg, #2a5298 0%, #1e3c72 100%)",
-                      },
                     }}
                   >
                     {loading
