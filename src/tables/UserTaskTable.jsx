@@ -312,7 +312,7 @@ export default function UserTaskTable({
 
           <Button
             variant="contained"
-            color="primary"
+            //color="primary"
             startIcon={<AddTaskIcon />}
             onClick={handleOpen}
             sx={{
@@ -627,7 +627,7 @@ export default function UserTaskTable({
                     {!searchTerm && (
                       <Button
                         variant="contained"
-                        color="primary"
+                        // color="#1e3c7"
                         startIcon={<AddTaskIcon />}
                         onClick={handleOpen}
                         sx={{
@@ -635,6 +635,8 @@ export default function UserTaskTable({
                           textTransform: "none",
                           fontWeight: 600,
                           px: 4,
+                          background:
+                            "linear-gradient(135deg, #1e3c72  0%, #1e3c72  100%)",
                         }}
                       >
                         Create Your First Task

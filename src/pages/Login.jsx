@@ -147,7 +147,7 @@ export default function Login({ onLogin, user }) {
               <Avatar
                 sx={{
                   m: "0 auto 16px",
-                  bgcolor: "primary.main",
+                  bgcolor: "#1e3c72",
                   width: 60,
                   height: 60,
                   boxShadow: "0 8px 20px rgba(102, 126, 234, 0.3)",

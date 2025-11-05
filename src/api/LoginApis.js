@@ -5,7 +5,7 @@ const registerUser = async (formData) => {
   try {
     const response = await axiosService.post(RoutePaths.registerUser, formData);
     localStorage.setItem("user-details", JSON.stringify(response.data));
-    alert("Registration successful!");
+    //  alert("Registration successful!");
     return { data: response.data, status: response.status };
   } catch (error) {
     console.error("error registering user", error);
