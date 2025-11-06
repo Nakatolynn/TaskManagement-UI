@@ -37,11 +37,12 @@ import TaskDetailsPreview from "../components/TaskDetailsPreview";
 import TaskManagementApis from "../api/TaskManagementApis";
 import { useNavigate } from "react-router-dom";
 const STATUS_MAP = {
-  0: { label: "Pending", color: "default" },
-  1: { label: "In Progress", color: "primary" },
-  2: { label: "In Review", color: "warning" },
-  3: { label: "Completed", color: "success" },
-  4: { label: "Closed", color: "success" },
+  0: { label: "Not Done", color: "default" },
+  1: { label: "Pending", color: "info" },
+  2: { label: "In Progress", color: "primary" },
+  3: { label: "In Review", color: "warning" },
+  4: { label: "Completed", color: "success" },
+  5: { label: "Closed", color: "secondary" },
 };
 
 const formatDate = (dateString) => {

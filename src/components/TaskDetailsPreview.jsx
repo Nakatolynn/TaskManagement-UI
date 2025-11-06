@@ -38,34 +38,37 @@ import {
 import { TextField, MenuItem } from "@mui/material";
 import TaskManagementApis from "../api/TaskManagementApis";
 import EditTaskForm from "./EditTaskForm";
-// Status mapping with better labels
 const STATUS_MAP = {
   0: {
-    label: "Open",
+    label: "Not Done",
     color: "default",
-    description: "Open",
+    description: "Not Done",
   },
   1: {
     label: "Pending",
-    color: "warning",
-    description: "Pending Action",
+    color: "info",
+    description: "Pending",
   },
   2: {
     label: "In Progress",
     color: "primary",
-    description: "In-Progress",
+    description: "In Progress",
   },
   3: {
     label: "In Review",
-    color: "secondary",
+    color: "warning",
     description: "In Review",
   },
   4: {
     label: "Completed",
     color: "success",
-    description: "Task  completed",
+    description: "Completed",
   },
-  5: { label: "Closed", color: "success", description: "Task Closed" },
+  5: {
+    label: "Closed",
+    color: "secondary",
+    description: "Closed",
+  },
 };
 
 export default function TaskDetailsPreview({ user, onLogout }) {

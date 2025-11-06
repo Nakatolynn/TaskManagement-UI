@@ -39,7 +39,7 @@ import TaskManagementApis from "../api/TaskManagementApis";
 import { useNavigate } from "react-router-dom";
 
 const STATUS_OPTIONS = [
-  { label: "Open", value: 0 },
+  { label: "Not Done", value: 0 },
   { label: "Pending", value: 1 },
   { label: "In Progress", value: 2 },
   { label: "In Review", value: 3 },

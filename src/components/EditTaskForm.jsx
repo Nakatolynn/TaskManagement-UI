@@ -14,12 +14,12 @@ import { Save, Cancel } from "@mui/icons-material";
 import TaskManagementApis from "../api/TaskManagementApis";
 
 const STATUS_OPTIONS = [
-  { value: 0, label: "Open" },
-  { value: 1, label: "Pending" },
-  { value: 2, label: "In Progress" },
-  { value: 3, label: "In Review" },
-  { value: 4, label: "Completed" },
-  { value: 5, label: "Closed" },
+  { label: "Not Done", value: 0 },
+  { label: "Pending", value: 1 },
+  { label: "In Progress", value: 2 },
+  { label: "In Review", value: 3 },
+  { label: "Completed", value: 4 },
+  { label: "Closed", value: 5 },
 ];
 
 export default function EditTaskForm({ taskDetails, onClose, onSuccess }) {
