@@ -60,6 +60,8 @@ export default function CreateTaskForm({
   const [loading, setLoading] = useState(false);
   const [noOfPreviousChanges, setNoOfChangesOnTask] = useState(0);
   const navigate = useNavigate();
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
   const formik = useFormik({
     initialValues: {
       taskName: initialData.taskName || "",
@@ -72,17 +74,50 @@ export default function CreateTaskForm({
     },
     validationSchema: Yup.object({
       taskName: Yup.string().required("Task Name is required"),
-      description: Yup.string().max(500, "Max 500 characters allowed"),
-      dueDate: Yup.date().nullable(),
+      description: Yup.string()
+        .required("Description is required")
+        .max(500, "Max 500 characters allowed"),
+      dueDate: Yup.date()
+        .required("Due Date is required")
+        .min(todayStr, "Due Date cannot be in the past"),
       status: Yup.number().required("Status is required"),
     }),
-    onSubmit: (values, { resetForm }) => {
+    onSubmit: async (values) => {
+      const errors = await formik.validateForm();
+      if (Object.keys(errors).length > 0) {
+        formik.setTouched({
+          taskName: true,
+          description: true,
+          dueDate: true,
+          status: true,
+        });
+        return;
+      }
       setLoading(true);
+      let hasError = false;
+      subTasks.forEach((subTask, index) => {
+        if (!subTask.dueDate) {
+          hasError = true;
+          setSnackbarMessage(`Subtask ${index + 1} is missing a Due Date`);
+          setSnackbarOpen(true);
+        } else if (
+          new Date(subTask.dueDate) < new Date().setHours(0, 0, 0, 0)
+        ) {
+          hasError = true;
+          setSnackbarMessage(`Subtask ${index + 1} has a past Due Date`);
+          setSnackbarOpen(true);
+        }
+      });
+
+      if (hasError) {
+        setLoading(false);
+        return;
+      }
+
       const fullTask = {
         ...values,
         subTasks,
       };
-
       TaskManagementApis.createTask(fullTask)
         .then((result) => {
           if (result) {
@@ -192,7 +227,6 @@ export default function CreateTaskForm({
 
               <form onSubmit={formik.handleSubmit}>
                 <Grid container spacing={3}>
-                  {/* Task Title */}
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -201,6 +235,7 @@ export default function CreateTaskForm({
                       label="Task Name"
                       value={formik.values.taskName}
                       onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                       error={
                         formik.touched.taskName &&
                         Boolean(formik.errors.taskName)
@@ -222,6 +257,7 @@ export default function CreateTaskForm({
                       rows={3}
                       value={formik.values.description}
                       onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                       error={
                         formik.touched.description &&
                         Boolean(formik.errors.description)
@@ -243,17 +279,26 @@ export default function CreateTaskForm({
                         name="status"
                         value={formik.values.status}
                         onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
                         label="Status"
                         error={
                           formik.touched.status && Boolean(formik.errors.status)
                         }
                       >
+                        <MenuItem value="">
+                          <em>Select status...</em>
+                        </MenuItem>
                         {STATUS_OPTIONS.map((option) => (
                           <MenuItem key={option.value} value={option.value}>
                             {option.label}
                           </MenuItem>
                         ))}
                       </Select>
+                      {formik.touched.status && formik.errors.status && (
+                        <Typography color="error" variant="caption">
+                          {formik.errors.status}
+                        </Typography>
+                      )}
                     </FormControl>
                   </Grid>
 
@@ -266,7 +311,14 @@ export default function CreateTaskForm({
                       type="date"
                       value={formik.values.dueDate}
                       onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                       InputLabelProps={{ shrink: true }}
+                      error={
+                        formik.touched.dueDate && Boolean(formik.errors.dueDate)
+                      }
+                      helperText={
+                        formik.touched.dueDate && formik.errors.dueDate
+                      }
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">
